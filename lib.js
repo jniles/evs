@@ -25,6 +25,8 @@ function settlePromises(array) {
   var i = array.length,
       results = [];
 
+  console.log(array);
+
   return new Promise(function (resolve, reject) {
 
     // for each promise in the array
@@ -32,13 +34,17 @@ function settlePromises(array) {
       promise
         .then(function (value) {
           results[idx] = { status : "resolved", value : value };
+          console.log('i', i);
           if (--i === 0) { resolve(results); } // decriment counter
         })
         .catch(function (value) {
           results[idx] = { status : "rejected", value : value };
+          console.log('i', i);
           if (--i === 0) { resolve(results); } // decriment counter
         });
     });
+
+    console.log('i', i);
 
     if (i === 0) {
       resolve(results);
