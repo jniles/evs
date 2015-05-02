@@ -113,8 +113,8 @@ function queryDomain(domain, email, timeout) {
         }
 
         // windows-style endings for hotmail addresses
-        client.write(command);
-        client.write('\r\n');
+        console.log('Sending command:', command);
+        client.write(command.value+'\r\n');
         console.log('Sent command:', command);
       });
 
@@ -122,11 +122,11 @@ function queryDomain(domain, email, timeout) {
         console.log('client got data:', res);
         if (res.indexOf("220") === 0 || res.indexOf("250") === 0 ||
             res.indexOf("\n220") !== -1 || res.indexOf("\n250") !== -1) {
-          conn.emit('prompt');
+          client.emit('prompt');
         } else if (res.indexOf("\n550") !== -1 || res.indexOf("550") === 0) {
-          conn.emit('failure');
+          client.emit('failure');
         } else {
-          conn.emit('uncertain');
+          client.emit('uncertain');
         }
       });
     });
