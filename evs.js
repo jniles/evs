@@ -46,7 +46,6 @@ function getDomains(address) {
   });
 }
 
-
 // runs a domain query
 //
 // there are four possible outcomes for this query:
@@ -97,7 +96,7 @@ function queryDomain(domain, email, timeout) {
     });
 
     // register uncertain event in case of timeout
-    client.on('timeout', () =>  client.emit('uncertain'));
+    client.on('timeout', function () { return client.emit('uncertain'); });
 
     client.on('connect', function () {
       console.log('Client connected!');
@@ -156,10 +155,12 @@ function main(email, timeout, autoretry) {
 
     // now we can try to test the email address versus external mail servers
     var resolution = getDomains(email)
-      .then((domains) => queryDomain(domains[0], email, timeout));
+      .then(function (domains) { return queryDomain(domains[0], email, timeout); });
 
     // reject or resolve depending on the result of the previous query
-    resolution.then(() => resolve(arguments)).catch(() => reject(arguments));
+    resolution
+      .then(function () { return resolve(arguments); })
+      .catch(function () { return reject(arguments); });
   });
 }
 

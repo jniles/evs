@@ -1,0 +1,23 @@
+{
+  "name": "evs",
+  "version": "0.1.0",
+  "description": "A simple email validator service",
+  "main": "evs.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jniles/evs.git"
+  },
+  "keywords": [
+    "email",
+    "validator"
+  ],
+  "author": "jniles",
+  "license": "GPLv3",
+  "bugs": {
+    "url": "https://github.com/jniles/evs/issues"
+  },
+  "homepage": "https://github.com/jniles/evs"
+}

@@ -1,0 +1,6 @@
+# ignore vim generated files
+*.swp
+*.swo
+
+# ignore email lists
+emails.txt
