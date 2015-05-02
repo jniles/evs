@@ -100,7 +100,7 @@ function queryDomain(domain, email, timeout) {
     client.on('timeout', () =>  client.emit('uncertain'));
 
     client.on('connect', function () {
-      console.log('Client connected!', res);
+      console.log('Client connected!');
       client.on('prompt', function () {
 
         // get the next command
