@@ -21,7 +21,6 @@ function Reader(file, type) {
   // initialize the proper reader by type
   switch (type) {
     case 'text':
-      console.log('Opening read stream', this.file);
       this._stream = fs.readFileSync(this.file, 'utf8');
       break;
     default:
@@ -34,7 +33,7 @@ function Reader(file, type) {
 Reader.prototype.read = function () {
   var data = this._stream;
   data = data.split('\n');
-  return data.filter(function (s) { return s === ''; });
+  return data.filter(function (s) { return s !== ''; });
 };
 
 module.exports = Reader;

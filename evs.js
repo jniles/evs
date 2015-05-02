@@ -12,32 +12,29 @@
 
 var dns = require('dns'),
     net = require('net'),
+    lib = require('./lib'),
     Reader = require('./Reader');
-
-// utilities
-
-// creates an interator from an array
-function* iter(array) {
-  for (var i = 0; i < array.length; i++) {
-    yield array[i];
-  }
-}
-
-// methods
 
 // provided an email address, will return either the
 // domain of the mail server, or error if the domain server
 // does not exist.
 function getDomains(address) {
   'use strict';
+
+  var re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+
   return new Promise(function (resolve, reject) {
 
+    // first test that an email address is properly formed via regular expressions
+    if (!re.test(address)) {
+      return reject(false);
+    }
     // parse the domain
     var domain = address.split('@')[1];
 
     // resolve the mail exchange server
     dns.resolveMx(domain, function (error, domains) {
-      if (error) { reject(error); }
+      if (error) { return reject(error); }
 
       // sort the domains in ascending order of priority
       domains.sort(function (a, b) { return a.priority > b.priority; });
@@ -60,9 +57,7 @@ function queryDomain(domain, email, timeout) {
       port = 25,
       server = domain.exchange;
 
-  console.log('Calling query domain with', arguments);
-
-  var cmd = iter([
+  var cmd = lib.iterate([
     'helo ' + server,
     'mail from: <' + email + '>',
     'rcpt to: <' + email + '>'
@@ -74,7 +69,6 @@ function queryDomain(domain, email, timeout) {
     client.setTimeout(timeout);
 
     function cleanup() {
-      console.log('Cleaning up...');
       client.removeAllListeners();
       client.destroy();
     }
@@ -86,7 +80,7 @@ function queryDomain(domain, email, timeout) {
     });
 
     client.on('success', function () {
-      resolve({ valid : true });
+      resolve({ valid : true, address : email, domain : domain.exchange });
       cleanup();
     });
 
@@ -99,7 +93,6 @@ function queryDomain(domain, email, timeout) {
     client.on('timeout', function () { return client.emit('uncertain'); });
 
     client.on('connect', function () {
-      console.log('Client connected!');
       client.on('prompt', function () {
 
         // get the next command
@@ -112,19 +105,17 @@ function queryDomain(domain, email, timeout) {
         }
 
         // windows-style endings for hotmail addresses
-        console.log('Sending command:', command);
         client.write(command.value+'\r\n');
-        console.log('Sent command:', command);
       });
 
       client.on('data', function (res) {
-        console.log('client got data:', res);
         if (res.indexOf("220") === 0 || res.indexOf("250") === 0 ||
             res.indexOf("\n220") !== -1 || res.indexOf("\n250") !== -1) {
           client.emit('prompt');
         } else if (res.indexOf("\n550") !== -1 || res.indexOf("550") === 0) {
           client.emit('failure');
         } else {
+          console.log('Emitting uncertain data', res);
           client.emit('uncertain');
         }
       });
@@ -144,24 +135,11 @@ function main(email, timeout, autoretry) {
   // default : false
   autoretry = autoretry || false;
 
-  var re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
-
-  return new Promise(function (resolve, reject) {
-
-    // first test that an email address is properly formed via regular expressions
-    if (!re.test(email)) {
-      reject(false);
-    }
+  console.log('Testing ...', email);
 
     // now we can try to test the email address versus external mail servers
-    var resolution = getDomains(email)
-      .then(function (domains) { return queryDomain(domains[0], email, timeout); });
-
-    // reject or resolve depending on the result of the previous query
-    resolution
-      .then(function () { return resolve(arguments); })
-      .catch(function () { return reject(arguments); });
-  });
+  return getDomains(email)
+    .then(function (domains) { return queryDomain(domains[0], email, timeout); });
 }
 
 module.exports = main;

@@ -9,16 +9,23 @@
 //
 // jshint esnext: true
 
-var Reader = require('./Reader'),
-    path   = require('path'),
+var path   = require('path'),
+    Reader = require('./Reader'),
     evs  = require('./evs'),
+    lib  = require('./lib'),
     file = process.argv[2];
 
 var data = new Reader(file),
     emails = data.read();
 
-Promise.all(emails.map(function (email) {
-    return evs(email);
-  }))
-  .then(console.log)
-  .catch(console.error);
+// iterate through list, solving all promises
+// as you go
+lib.settlePromises(emails.map(function (addr) {
+  return evs(addr);
+}))
+.then(function (array) {
+  console.log('All promises settled', array); 
+})
+.catch(function (reason) {
+  console.error('settlePromises errored for this reason:', reason);
+});
